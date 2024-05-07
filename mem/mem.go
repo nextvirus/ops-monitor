@@ -6,7 +6,6 @@ import (
     "os"
     "strconv"
     "strings"
-    "time"
 )
 
 // getVmRSS 从 /proc/[pid]/status 获取 VmRSS 值
