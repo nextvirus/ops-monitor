@@ -5,35 +5,33 @@ import (
 )
 
 func main() {
-    pid := os.Getpid() // 获取当前进程的 PID
-    ticker := time.NewTicker(2 * time.Second)
+    pid := os.Getpid() // 当前进程的 PID
+    memUsageTicker := time.NewTicker(2 * time.Second) // 每2秒更新一次
 
     defer func() {
-        // 停止 ticker
-        ticker.Stop()
+        // 程序结束时停止 ticker
+        <-memUsageTicker.C
     }()
 
-    for range ticker.C {
-        rss, err := getVmRSS(pid)
-        if err != nil {
-            fmt.Println("Error reading VmRSS:", err)
-            continue
-        }
+    fmt.Println("Memory usage of PID", pid, "will update every 2 seconds.")
 
-        totalMemory, err := getTotalMemory()
-        if err != nil {
-            fmt.Println("Error reading total memory:", err)
-            continue
-        }
+    for {
+        select {
+        case <-memUsageTicker.C:
+            rss, err := getVmRSS(pid)
+            if err != nil {
+                fmt.Println("Error reading VmRSS:", err)
+                continue
+            }
 
-        printMemoryUsage(pid, rss, totalMemory)
+            totalMemory, err := getTotalMemory()
+            if err != nil {
+                fmt.Println("Error reading total memory:", err)
+                continue
+            }
 
-        // 清屏，模仿 top 命令的效果
-        cmd := exec.Command("clear")
-        cmd.Stdout = os.Stdout
-        err = cmd.Run()
-        if err != nil {
-            fmt.Println("Error clearing screen:", err)
+            memUsagePercent := float64(rss) / float64(totalMemory) * 100
+            fmt.Printf("\rMemory Usage: %s (%.2f%%)", humanizeBytes(rss*1024), memUsagePercent)
         }
     }
 }

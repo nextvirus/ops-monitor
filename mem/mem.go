@@ -1,58 +1,17 @@
-package mem
-
+package main
 
 import (
+    "bufio"
     "fmt"
     "os"
-    "os/exec"
     "strconv"
     "strings"
-    "syscall"
     "time"
-    "unsafe"
 )
 
-var (
-    kernelPageSize = uint64(syscall.Getpagesize())
-    pageSizes      = map[string]uint64{
-        "4K": 4096,
-        "2M": 2097152,
-        "1G": 1073741824,
-    }
-)
-
-// 读取并解析 /proc/meminfo 文件，返回总内存（单位：KB）
-func getTotalMemory() (uint64, error) {
-    const memInfoPath = "/proc/meminfo"
-    file, err := os.Open(memInfoPath)
-    if err != nil {
-        return 0, err
-    }
-    defer file.Close()
-
-    scanner := bufio.NewScanner(file)
-    for scanner.Scan() {
-        line := scanner.Text()
-        if strings.HasPrefix(line, "MemTotal:") {
-            parts := strings.Split(line, " ")
-            if len(parts) < 2 {
-                continue // 格式错误，跳过
-            }
-            memTotal, err := strconv.ParseUint(parts[1], 10, 64)
-            if err != nil {
-                return 0, err
-            }
-            return memTotal, nil
-        }
-    }
-    return 0, fmt.Errorf("MemTotal value not found")
-}
-
-
-// 读取并解析 /proc/[pid]/status 文件，返回 VmRSS 值
+// getVmRSS 从 /proc/[pid]/status 获取 VmRSS 值
 func getVmRSS(pid int) (uint64, error) {
-    statusFilePath := fmt.Sprintf("/proc/%d/status", pid)
-    file, err := os.Open(statusFilePath)
+    file, err := os.Open(fmt.Sprintf("/proc/%d/status", pid))
     if err != nil {
         return 0, err
     }
@@ -64,34 +23,52 @@ func getVmRSS(pid int) (uint64, error) {
         if strings.HasPrefix(line, "VmRSS:") {
             parts := strings.Split(line, " ")
             if len(parts) < 2 {
-                continue // 格式错误，跳过
+                return 0, fmt.Errorf("unexpected VmRSS line format: %s", line)
             }
-            rssValue, err := strconv.ParseUint(strings.TrimSpace(parts[1]), 10, 64)
+            rssValue, err := strconv.ParseUint(parts[1], 10, 64)
             if err != nil {
                 return 0, err
             }
             return rssValue, nil
         }
     }
-    return 0, fmt.Errorf("VmRSS value not found")
+    return 0, fmt.Errorf("VmRSS value not found for pid %d", pid)
 }
 
-func printMemoryUsage(pid int, rss, totalMemory uint64) {
-    fmt.Printf("%-6s %-8s %-10s\n", "PID", "RSS", "MEM USAGE")
-    fmt.Printf("%-6d %-8s %-10.2f%%\n", pid, humanizeBytes(rss * pageSizes["4K"]), float64(rss)/float64(totalMemory)*100)
-}
-
-func humanizeBytes(bytes uint64, sizes []string) string {
-    if bytes == 0 {
-        return "0"
+// getTotalMemory 从 /proc/meminfo 获取总内存
+func getTotalMemory() (uint64, error) {
+    file, err := os.Open("/proc/meminfo")
+    if err != nil {
+        return 0, err
     }
-    base := kernelPageSize
-    for _, size := range sizes {
-        newSize := base * pageSizes[size]
-        if bytes >= newSize {
-            return fmt.Sprintf("%d%s", bytes/newSize, size)
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+        line := scanner.Text()
+        if strings.HasPrefix(line, "MemTotal:") {
+            parts := strings.Split(line, " ")
+            if len(parts) < 2 {
+                return 0, fmt.Errorf("unexpected MemTotal line format: %s", line)
+            }
+            memTotal, err := strconv.ParseUint(parts[1], 10, 64)
+            if err != nil {
+                return 0, err
+            }
+            return memTotal, nil
         }
-        base = newSize
     }
-    return fmt.Sprintf("%dB", bytes)
+    return 0, fmt.Errorf("MemTotal value not found")
 }
+
+// humanizeBytes 将字节转换为易读的格式
+func humanizeBytes(bytes uint64) string {
+    for _, unit := range []string{"B", "KB", "MB", "GB", "TB"} {
+        if float64(bytes) < 1000 {
+            return fmt.Sprintf("%.2f %s", float64(bytes), unit)
+        }
+        bytes /= 1000
+    }
+    return "n/a"
+}
+
