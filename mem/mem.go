@@ -107,7 +107,7 @@ func GetTotalMemory() (uint64, error) {
             if err != nil {
                 return 0, err
             }
-            return memTotal * 1024, nil // 因为 MemTotal 的单位是 KB，所以乘以 1024 转换为 Bytes
+            return memTotal , nil // 因为 MemTotal 的单位是 KB，所以乘以 1024 转换为 Bytes
         }
     }
     return 0, fmt.Errorf("MemTotal value not found in /proc/meminfo")
