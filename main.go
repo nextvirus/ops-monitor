@@ -32,6 +32,12 @@ func main() {
                 continue
             }
 
+			VmSize, err := mem.GetVmSize(pid)
+            if err != nil {
+                fmt.Println("Error reading VmSize:", err)
+                continue
+            }
+
             totalMemory, err := mem.GetTotalMemory()
             if err != nil {
                 fmt.Println("Error reading total memory:", err)
@@ -39,7 +45,7 @@ func main() {
             }
 
             // 计算总内存使用率，包括物理内存和交换内存
-            totalMemUsage := uint64(rss) + uint64(vmSwap)
+            totalMemUsage := uint64(rss) + uint64(vmSwap) + uint64(VmSize)
             memUsagePercent := float64(totalMemUsage) / float64(totalMemory) * 100
 
             fmt.Printf("\rMemory Usage of PID %d: %s (%.2f%%)", pid, mem.HumanizeBytes(uint64(totalMemUsage)*1024), memUsagePercent)
