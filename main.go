@@ -1,7 +1,7 @@
 package main
 
 import (
-	ops-monitor/mem
+	"ops-monitor/mem"
 )
 
 func main() {
