@@ -1,6 +1,8 @@
 package main
 
-import ops-monitor/mem
+import (
+	ops-monitor/mem
+)
 
 func main() {
     pid := os.Getpid() // 获取当前进程的 PID
