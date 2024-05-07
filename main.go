@@ -32,11 +32,6 @@ func main() {
                 continue
             }
 
-			VmSize, err := mem.GetVmSize(pid)
-            if err != nil {
-                fmt.Println("Error reading VmSize:", err)
-                continue
-            }
 
             totalMemory, err := mem.GetTotalMemory()
             if err != nil {
