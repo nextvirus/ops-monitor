@@ -3,7 +3,6 @@ package main
 import (
     "fmt"
     "ops-monitor/mem"
-    "os"
     "time"
 )
 
