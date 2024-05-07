@@ -21,20 +21,20 @@ func main() {
     for {
         select {
         case <-memUsageTicker.C:
-            rss, err := mem.getVmRSS(pid)
+            rss, err := mem.GetVmRSS(pid)
             if err != nil {
                 fmt.Println("Error reading VmRSS:", err)
                 continue
             }
 
-            totalMemory, err := mem.getTotalMemory()
+            totalMemory, err := mem.GetTotalMemory()
             if err != nil {
                 fmt.Println("Error reading total memory:", err)
                 continue
             }
 
             memUsagePercent := float64(rss) / float64(totalMemory) * 100
-            fmt.Printf("\rMemory Usage: %s (%.2f%%)", mem.humanizeBytes(rss*1024), memUsagePercent)
+            fmt.Printf("\rMemory Usage: %s (%.2f%%)", mem.HumanizeBytes(rss*1024), memUsagePercent)
         }
     }
 }
