@@ -9,7 +9,7 @@ import (
 )
 
 // getVmRSS 从 /proc/[pid]/status 获取 VmRSS 值
-func getVmRSS(pid int) (uint64, error) {
+func GetVmRSS(pid int) (uint64, error) {
     file, err := os.Open(fmt.Sprintf("/proc/%d/status", pid))
     if err != nil {
         return 0, err
