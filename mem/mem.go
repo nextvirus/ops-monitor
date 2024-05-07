@@ -47,18 +47,20 @@ func GetTotalMemory() (uint64, error) {
     for scanner.Scan() {
         line := scanner.Text()
         if strings.HasPrefix(line, "MemTotal:") {
-            parts := strings.Split(line, " ")
+            parts := strings.Fields(line) // 使用 Fields 而不是 Split 来自动处理多个空格
             if len(parts) < 2 {
-                return 0, fmt.Errorf("unexpected MemTotal line format: %s", line)
+                return 0, fmt.Errorf("unexpected MemTotal line format in /proc/meminfo: %s", line)
             }
-            memTotal, err := strconv.ParseUint(parts[1], 10, 64)
+            memTotalStr := strings.TrimSpace(parts[1]) // 移除空格
+            memTotal, err := strconv.ParseUint(memTotalStr, 10, 64)
             if err != nil {
-                return 0, err
+                return 0, fmt.Errorf("parsing MemTotal value failed: %s", err)
             }
-            return memTotal, nil
+            // 注意：MemTotal 的单位是 KB，根据需要转换为 Bytes 或其他单位
+            return memTotal * 1024, nil // 因为每个内存页通常是 1KB，所以乘以 1024 将单位转换为 Bytes
         }
     }
-    return 0, fmt.Errorf("MemTotal value not found")
+    return 0, fmt.Errorf("MemTotal value not found in /proc/meminfo")
 }
 
 // humanizeBytes 将字节转换为易读的格式
