@@ -3,6 +3,8 @@ package main
 import (
 	"ops-monitor/mem"
 	"time"
+	"fmt"
+	"os"
 )
 
 func main() {
@@ -19,20 +21,20 @@ func main() {
     for {
         select {
         case <-memUsageTicker.C:
-            rss, err := getVmRSS(pid)
+            rss, err := mem.getVmRSS(pid)
             if err != nil {
                 fmt.Println("Error reading VmRSS:", err)
                 continue
             }
 
-            totalMemory, err := getTotalMemory()
+            totalMemory, err := mem.getTotalMemory()
             if err != nil {
                 fmt.Println("Error reading total memory:", err)
                 continue
             }
 
             memUsagePercent := float64(rss) / float64(totalMemory) * 100
-            fmt.Printf("\rMemory Usage: %s (%.2f%%)", humanizeBytes(rss*1024), memUsagePercent)
+            fmt.Printf("\rMemory Usage: %s (%.2f%%)", mem.humanizeBytes(rss*1024), memUsagePercent)
         }
     }
 }
