@@ -9,7 +9,7 @@ import (
 )
 
 // getVmRSS 从 /proc/[pid]/status 获取 VmRSS 值
-func GetVmRSS(pid int) (uint64, error) {
+func getVmRSS(pid int) (uint64, error) {
     file, err := os.Open(fmt.Sprintf("/proc/%d/status", pid))
     if err != nil {
         return 0, err
@@ -20,11 +20,12 @@ func GetVmRSS(pid int) (uint64, error) {
     for scanner.Scan() {
         line := scanner.Text()
         if strings.HasPrefix(line, "VmRSS:") {
-            parts := strings.Split(line, " ")
+            parts := strings.Fields(line) // 使用 Fields 代替 Split 来自动处理多个空格
             if len(parts) < 2 {
                 return 0, fmt.Errorf("unexpected VmRSS line format: %s", line)
             }
-            rssValue, err := strconv.ParseUint(parts[1], 10, 64)
+            // 确保 parts[1] 不是空字符串
+            rssValue, err := strconv.ParseUint(strings.TrimSpace(parts[1]), 10, 64)
             if err != nil {
                 return 0, err
             }
