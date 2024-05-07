@@ -39,7 +39,7 @@ func main() {
                 continue
             }
 
-            // 计算总内存使用率，包括物理内存和交换内存
+            // 计算总内存使用率，包括物理内存和交换内存, VmSize 由于其包含了大量可能未被使用或实际存储在物理内存之外的部分，因此不适合直接用于计算内存使用率。
             totalMemUsage := uint64(rss) + uint64(vmSwap) 
             memUsagePercent := float64(totalMemUsage) / float64(totalMemory) * 100
 
